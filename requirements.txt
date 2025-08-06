@@ -1,0 +1,17 @@
+Flask==2.3.3
+Flask-Cors==4.0.0
+requests==2.31.0
+python-dotenv==1.0.1
+PyJWT==2.8.0
+colorlog==6.8.2
+gunicorn==21.2.0
+
+# فقط اگه از wordpress ارتباط REST استفاده می‌کنی:
+requests-oauthlib==1.3.1
+
+# برای دیتابیس یا ORM (اختیاری، اگه خواستی اضافه کنیم)
+# SQLAlchemy==2.0.30
+
+# برای تست
+pytest==8.2.1
+coverage==7.5.3
