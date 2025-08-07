@@ -67,7 +67,6 @@ def like_item(item_id: int):
     db = _load_db()
     ip = _get_user_ip()
 
-    # پیدا کردن پست
     post = next((p for p in db["posts"] if p["id"] == item_id), None)
     if not post:
         return jsonify({"message": "Not found"}), 404
@@ -76,15 +75,16 @@ def like_item(item_id: int):
     post.setdefault("dislikes", 0)
     db.setdefault("votes", {}).setdefault(str(item_id), {})
 
-    # چک کردن رای قبلی
     prev_vote = db["votes"][str(item_id)].get(ip)
+
     if prev_vote == "like":
         return jsonify({"id": item_id, "likes": post["likes"], "dislikes": post["dislikes"], "message": "Already liked"}), 200
     elif prev_vote == "dislike":
         post["dislikes"] = max(0, post["dislikes"] - 1)
+        post["likes"] += 1
+    else:
+        post["likes"] += 1
 
-    # ثبت لایک
-    post["likes"] += 1
     db["votes"][str(item_id)][ip] = "like"
 
     _save_db(db)
@@ -104,12 +104,15 @@ def dislike_item(item_id: int):
     db.setdefault("votes", {}).setdefault(str(item_id), {})
 
     prev_vote = db["votes"][str(item_id)].get(ip)
+
     if prev_vote == "dislike":
         return jsonify({"id": item_id, "likes": post["likes"], "dislikes": post["dislikes"], "message": "Already disliked"}), 200
     elif prev_vote == "like":
         post["likes"] = max(0, post["likes"] - 1)
+        post["dislikes"] += 1
+    else:
+        post["dislikes"] += 1
 
-    post["dislikes"] += 1
     db["votes"][str(item_id)][ip] = "dislike"
 
     _save_db(db)
