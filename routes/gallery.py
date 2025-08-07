@@ -1,4 +1,3 @@
- routes/gallery.py
 import os, json
 from flask import Blueprint, request, jsonify
 
