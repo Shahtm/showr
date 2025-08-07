@@ -22,7 +22,7 @@ def create_app():
     # در غیر اینصورت با کاما چند دامنه بده: https://showroom.gadgetrox.com,https://xxx.loca.lt,http://localhost:3000
     raw_origins = os.environ.get(
         "CORS_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000"
+        "https://showroom.gadgetrox.com/,https://showroom.gadgetrox.com"
     ).strip()
 
     cors_kwargs = {
