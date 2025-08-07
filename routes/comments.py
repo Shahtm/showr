@@ -51,6 +51,9 @@ def list_comments():
             "text": c.get("text") or "",
             "created_at": c.get("created_at") or _now_iso(),
             "avatar_url": c.get("avatar_url") or "",
+            "likes": c.get("likes", 0),
+            "dislikes": c.get("dislikes", 0),
+            "reaction": c.get("reaction", "")  # just for debug/testing
         }
         for c in arr
     ]
@@ -75,16 +78,55 @@ def create_comment():
         "author_name": author or "Guest",
         "text": text,
         "created_at": _now_iso(),
-        "avatar_url": "",  # optional
+        "avatar_url": "",
+        "likes": 0,
+        "dislikes": 0,
+        "reaction": ""  # reaction by this user
     }
     db["comments"].setdefault(str(post_id), []).append(comment)
     _save_db(db)
 
-    # return single comment in frontend shape
     return jsonify({
         "id": comment["id"],
         "author_name": comment["author_name"],
         "text": comment["text"],
         "created_at": comment["created_at"],
         "avatar_url": comment["avatar_url"],
+        "likes": comment["likes"],
+        "dislikes": comment["dislikes"]
     }), 201
+
+# POST /api/comments/react { comment_id, action }  where action = "like" or "dislike"
+@comments_bp.route("/react", methods=["POST"])
+def react_comment():
+    data = request.get_json(silent=True) or {}
+    comment_id = data.get("comment_id")
+    action = data.get("action")
+
+    if not comment_id or action not in ["like", "dislike"]:
+        return jsonify({"message": "comment_id and valid action required"}), 400
+
+    db = _load_db()
+    updated = False
+    for comments in db["comments"].values():
+        for c in comments:
+            if str(c["id"]) == str(comment_id):
+                prev_reaction = c.get("reaction", "")
+                if prev_reaction == action:
+                    # toggle off
+                    c[action + "s"] = max(0, c.get(action + "s", 0) - 1)
+                    c["reaction"] = ""
+                else:
+                    # switch
+                    if prev_reaction:
+                        c[prev_reaction + "s"] = max(0, c.get(prev_reaction + "s", 0) - 1)
+                    c[action + "s"] = c.get(action + "s", 0) + 1
+                    c["reaction"] = action
+                updated = True
+                break
+
+    if updated:
+        _save_db(db)
+        return jsonify({"message": "reaction updated"})
+    else:
+        return jsonify({"message": "comment not found"}), 404
